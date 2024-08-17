@@ -1,98 +1,140 @@
 // Import world component from "@minecraft/server"
-import { world } from '@minecraft/server';
+import { world, system, } from '@minecraft/server';
 
-function checkLock(b, p, i, a) {
-    //world.sendMessage("Getting dynamicProperty: "+"containerName_"+b.dimension.id.slice(10)+"_"+b.x+"_"+b.y+"_"+b.z);
-    const nameTag = world.getDynamicProperty("containerName_"+b.dimension.id.slice(10)+"_"+b.x+"_"+b.y+"_"+b.z);
+function actionBar(player, message){
+    system.run(() => actionBarHelper(player, message));
+}
+
+function actionBarHelper(player, message) {
+    player.onScreenDisplay.setActionBar(message);
+}
+
+function createPropertyKey(dimension, x, y, z){
+    return "lockedContainer".concat('|', dimension.slice(10),'|', x, '|', y, '|', z)
+}
+
+function setLock(dimension, x, y, z, lock, type) {
+    world.setDynamicProperty(
+        createPropertyKey(dimension, x, y, z),
+        type.concat('|',lock)
+    );
+}
+
+function deleteLock(dimension, x, y, z) {
+    // Unset the matching dynamic property
+    world.setDynamicProperty(createPropertyKey(dimension, x, y, z), undefined);
+}
+
+function lockExists(dimension, x, y, z) {
+    let property = world.getDynamicProperty(createPropertyKey(dimension, x, y, z));
+    if(!property){
+        return false;
+    }else{
+        return property.split('|', 2);
+    }
+}
+
+function lockedForUser(user, dimension, x, y, z) {
+    const lock = lockExists(dimension, x, y, z);
+    if (!lock) {
+        return false;
+    }else if(lock[1].includes(user.toLowerCase())){
+        return false;
+    }else{
+        return lock;
+    }
+}
+
+function checkLock(event, action) {
+    const b = event.block;
+    const player = event.player;
+    const item = event.itemStack;
+
     if(b.matches("barrel") || b.typeId.includes("shulker_box")){
-        //world.sendMessage("barrel or chest");
-        //world.sendMessage("nameTage of container: "+n);
-        if(typeof nameTag !== "undefined" && nameTag.startsWith("Lock:")){
-            //world.sendMessage("container locked");
-            if(p === undefined){
-                return true
-            }else if(!nameTag.toLowerCase().includes(p.name.toLowerCase())){
-                //world.sendMessage("container locked to not current player");
-                if(p.isOp()){
-                    if(typeof i !== "undefined" && i.matches("dirt")){
-                        world.sendMessage("§eAdmin §c"+p.name+"§e "+a+"ed locked "+b.typeId.slice(10)+" at "+b.location.x+" "+b.location.y+" "+b.location.z+" in the "+b.dimension.id.slice(10)+", with lock tag ‘"+nameTag.slice(5).trim()+"’");
-                        return false;
-                    }else{
-                        p.sendMessage("§6A player has locked this container with lock tag ‘"+nameTag.slice(5).trim()+"’. As admin, you can can override the lock by "+a+"ing the container while holding a dirt block.");
-                        return true;
-                    }
+        const lock = lockedForUser(player.name, b.dimension.id, b.location.x, b.location.y, b.location.z);
+        if(lock){
+            // container locked
+            if(player.isOp()){
+                if(typeof item !== "undefined" && item.matches("dirt")){
+                    world.sendMessage("§eAdmin §c"+player.name+"§e "+action+"ed locked "+lock[0]+" at "+b.location.x+" "+b.location.y+" "+b.location.z+" in the "+b.dimension.id.slice(10)+", with lock tag ‘"+lock[1]+"’");
+                    return false;
                 }else{
+                    actionBar(player,"§6A player has locked this "+lock[0]+" with lock tag ‘"+lock[1]+"’. As admin, you can can override the lock by "+action+"ing the "+lock[0]+" while holding a dirt block.");
                     return true;
                 }
+            }else{
+                actionBar(player,"§cThis "+lock[0]+" is locked, only users ‘"+lock[1]+"’ may "+action+" it.");
+                return true;
             }
         }
     }
     return false;
 }
 
-world.beforeEvents.playerInteractWithBlock.subscribe(event => {
-    const nameTag = event.itemStack.nameTag;
-    const s = event.itemStack;
-    var container = false;
-    if(s.matches("barrel") || s.typeId.includes("shulker_box")){
-        container = true;
-    }
-
+function getPlacedBlock(event){
     const { block, blockFace } = event;
-
-    let b2;
     switch (blockFace) {
         case "Up":
-            b2 = block.above();
-            break;
+            return block.above();
         case "Down":
-            b2 = block.below();
-            break;
+            return block.below();
         case "North":
-            b2 = block.north();
-            break;
+            return block.north();
         case "South":
-            b2 = block.south();
-            break;
+            return block.south();
         case "East":
-            b2 = block.east();
-            break;
+            return block.east();
         case "West":
-            b2 = block.west();
-            break;
+            return block.west();
         default:
             throw new Error("Invalid blockFace value");
     }
+}
 
-    const dev = false;
-    if(container === true && typeof nameTag !== "undefined"){
-        if(nameTag.toLowerCase().includes(event.player.name.toLowerCase()) || dev){
-            world.setDynamicProperty("containerName_"+b2.dimension.id.slice(10)+"_"+b2.x+"_"+b2.y+"_"+b2.z, nameTag); 
-            //world.sendMessage("DynamicWorldProperty set: "+"containerName_"+b2.dimension.id.slice(10)+"_"+b2.x+"_"+b2.y+"_"+b2.z);
-        }else{
-            event.player.sendMessage("§cYou cannot lock a container without your username on it!!!");
-            event.cancel = true;
+world.beforeEvents.playerInteractWithBlock.subscribe(event => {
+    
+    if(checkLock(event, "open")){
+        event.cancel = true;
+        return;
+    }
+
+    const s = event.itemStack;
+    if(typeof s !== "undefined"){
+
+        //split off the match and save a value of "barrel" or "shulker", and leave it undefined if neither
+        const type = s.matches("barrel") ? "barrel" : s.typeId.includes("shulker_box") ? "shulker" : null;
+        
+        if (type) {
+            let nameTag = event.itemStack.nameTag;
+            if(typeof nameTag !== "undefined" && nameTag.slice(0, 5).toLowerCase() === "lock:"){
+                const dev = true;
+                nameTag = nameTag.slice(5).trim();
+                if(nameTag.toLowerCase().includes(event.player.name.toLowerCase()) || dev){
+                    const b = getPlacedBlock(event);
+                    setLock(b.dimension.id, b.x, b.y, b.z, nameTag, type);
+                }else{
+                    actionBar(event.player,"§cYou cannot lock a container without your username on it!!!");
+                    event.cancel = true;
+                }
+            }
         }
+    }   
+})
+
+world.afterEvents.playerInteractWithBlock.subscribe(event => {
+
+    const b = getPlacedBlock(event);
+    //delete lock if a barrel or shulker was not placed
+    if(!b.matches("barrel") && !b.typeId.includes("shulker_box")){
+        deleteLock(b.dimension.id, b.x, b.y, b.z);
     }    
 })
 
-world.beforeEvents.playerInteractWithBlock.subscribe(event => {
-    const nameTag = world.getDynamicProperty("containerName_"+event.block.dimension.id.slice(10)+"_"+event.block.x+"_"+event.block.y+"_"+event.block.z);
-    // world.sendMessage("Block Nametag: "+nameTag);
-    if(checkLock(event.block, event.player, event.itemStack, "open")){
-        event.cancel = true;
-        event.player.sendMessage("§cThis container is locked, only users ‘"+nameTag.slice(5).trim()+"’ may open it.");        
-    }
-})
-
 world.beforeEvents.playerBreakBlock.subscribe(event => {
-    const nameTag = world.getDynamicProperty("containerName_"+event.block.dimension.id.slice(10)+"_"+event.block.x+"_"+event.block.y+"_"+event.block.z);
-    // world.sendMessage("Block Nametag: "+nameTag);
-    if(checkLock(event.block, event.player, event.itemStack, "destroy")){
+    if(checkLock(event, "destroy")){
         event.cancel = true;
-        event.player.sendMessage("§cThis container is locked, only users ‘"+nameTag.slice(5).trim()+"’ may break it.");
     }else{
-        world.setDynamicProperty("containerName_"+event.block.dimension.id.slice(10)+"_"+event.block.x+"_"+event.block.y+"_"+event.block.z, undefined);
+        deleteLock(event.block.dimension.id, event.block.x, event.block.y, event.block.z);
     }
 })
 
@@ -100,10 +142,101 @@ world.beforeEvents.explosion.subscribe(event => {
     const b = event.getImpactedBlocks();
 
     for(let i=0; i<b.length; i++){
-        if(checkLock(b[i])){
+        if(lockExists(event.dimension.id, b[i].location.x, b[i].location.y, b[i].location.z,)){
             event.cancel=true;
             break;
         }
     }
 
+})
+
+world.afterEvents.entityDie.subscribe(event =>{
+    world.sendMessage("Entity ID: "+event.deadEntity);
+})
+
+world.afterEvents.pistonActivate.subscribe(event => {
+
+    const attached = event.piston.getAttachedBlocks();
+    const dimension = event.block.dimension.id;
+    let ex = 1;
+    if(!event.isExpanding){
+        ex = -1
+    }
+   
+    let move = [];
+
+    for(let i=0; i<attached.length; i++) {
+        world.sendMessage("Attached block type "+attached[i].typeId+": "+attached[i].location.x+" "+attached[i].location.y+" "+attached[i].location.z);
+        
+        let lock = lockExists(dimension, attached[i].location.x, attached[i].location.y, attached[i].location.z);
+
+        if(lock && lock[0] === "barrel"){
+            let xadd = 0;
+            let yadd = 0;
+            let zadd = 0;
+            switch (event.block.permutation.getState("facing_direction")) {
+                case 0:
+                    yadd -= ex;
+                    break;
+                case 1:
+                    yadd += ex;
+                    break;
+                case 2:
+                    zadd += ex;
+                    break;
+                case 3:
+                    zadd -= ex;
+                    break;
+                case 4:
+                    xadd += ex;
+                    break;
+                case 5:
+                    xadd -= ex;
+                    break;
+                default:
+                    throw new Error("Invalid facing_direction value");
+            }
+            //save location for moving at the end of the loop
+            move.push([[attached[i].location.x+xadd, attached[i].location.y+yadd, attached[i].location.z+zadd], lock]);
+            
+            for (let i = 0; i < move.length; i++) {
+                world.sendMessage(`Dimension: [${move[i][0][0]}, ${move[i][0][1]}, ${move[i][0][2]}], Lock: ${move[i][1]}`);
+            }
+
+            //delete lock
+            deleteLock(dimension, attached[i].location.x, attached[i].location.y, attached[i].location.z);
+        }
+
+    }
+    //reset locks for all moved blocks that previously had a lock
+    move.forEach(item => {
+        setLock(dimension, item[0][0], item[0][1], item[0][2], item[1][1], item[1][0]);
+    });
+
+})
+
+
+
+//debugging
+world.beforeEvents.chatSend.subscribe(event => {
+    
+    if(event.message.slice(0,3) === '!lc'){
+        event.cancel = true;
+        const command = event.message.split(" ");
+        switch(command[1]){
+            case "props":
+                var props = world.getDynamicPropertyIds();
+                world.sendMessage("Current Dynamic Properties:");
+                props.forEach(p => {
+                    world.sendMessage("PropId: "+p+" Value: "+world.getDynamicProperty(p));
+                });
+                break;
+            case "clearProps":
+                world.sendMessage("All Dynamic Properties cleared")
+                world.clearDynamicProperties();
+                break;
+            default:
+                world.sendMessage("No custom command for lockedContainers plugin by that name");
+        }
+    }
 })
