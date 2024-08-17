@@ -7,6 +7,12 @@
 		"version": [0, 0, 2],
 		"min_engine_version": [1, 21, 0]
 	},
+    "metadata": {
+        "authors": ["AsherMaximum"],
+        "license": "GPL v3",
+        "product-type": "addon",
+        "url": "https://github.com/AsherMaximum/MinecraftBedrockLockedChests"
+    },
 	"modules": [
         {
           "description": "lockedContainersScript",
