@@ -13,8 +13,9 @@ Server admins have the ability to override locks.
 - The `Experiments -> Beta APIs` feature must be turned on for this add-on to function properly.
 
 ## Installation
-1. Download the add-on and place it in your Minecraft world folder.
+1. [Download the Add-on Pack](lockedContainers.mcaddon) and open it to install.
 2. Enable the `Experiments -> Beta APIs` feature in your world settings.
+3. Add it to your world under 'Behavior Packs'.
 
 ## Usage
 - To lock a container, rename it to `Lock: <player1, player2 ...>`, including your own username.
