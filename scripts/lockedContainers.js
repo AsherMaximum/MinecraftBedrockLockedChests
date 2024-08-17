@@ -107,7 +107,8 @@ world.beforeEvents.playerInteractWithBlock.subscribe(event => {
         if (type) {
             let nameTag = event.itemStack.nameTag;
             if(typeof nameTag !== "undefined" && nameTag.slice(0, 5).toLowerCase() === "lock:"){
-                const dev = true;
+                //for testing, to allow placing containers not locked by user
+                const dev = false;
                 nameTag = nameTag.slice(5).trim();
                 if(nameTag.toLowerCase().includes(event.player.name.toLowerCase()) || dev){
                     const b = getPlacedBlock(event);
