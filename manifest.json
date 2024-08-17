@@ -2,7 +2,7 @@
 	"format_version": 2,
 	"header": {
 		"name": "Locked Containers",
-		"description": "v2Allows for locking barrels and shulker boxes by renaming the container to 'Lock: <player1, player2 ...>' before placing it.\nPlayers must include their own username when renaming, otherwise placing of the container will be blocked.\nAlso prevents those containers from being destroyed in an explosion. Explosions near locked containers are canceled, so this has the side effect of protecting the area from creepers and TNT explosions.\n\nChests are not included in locking, due to a graphical glitch that happens when an unauthorized player tries to mine a double chest, which results in the chest splitting into two single chests and being unable to be opened until the world is reloaded.\n\nServer admins can override locks.\nRequires Experiments->Beta APIs to be turned on.",
+		"description": "Allows for locking barrels and shulker boxes by renaming the container to 'Lock: <player1, player2 ...>' before placing it.\nPlayers must include their own username when renaming, otherwise placing of the container will be blocked.\nAlso prevents those containers from being destroyed in an explosion. Explosions near locked containers are canceled, so this has the side effect of protecting the area from creepers and TNT explosions.\n\nChests are not included in locking, due to a graphical glitch that happens when an unauthorized player tries to mine a double chest, which results in the chest splitting into two single chests and being unable to be opened until the world is reloaded.\n\nServer admins can override locks.\nRequires Experiments->Beta APIs to be turned on.",
 		"uuid": "f5a7398f-6d60-4ebd-abf2-de2cde678e9d",
 		"version": [0, 0, 2],
 		"min_engine_version": [1, 21, 0]
