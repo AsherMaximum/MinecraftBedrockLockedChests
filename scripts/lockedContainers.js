@@ -360,8 +360,7 @@ world.afterEvents.pistonActivate.subscribe(event => {
 
 //debugging
 world.beforeEvents.chatSend.subscribe(event => {
-    
-    if(event.message.slice(0,3) === '!lc'){
+    if(event.sender.isOp() && event.message.slice(0,3) === '!lc'){
         event.cancel = true;
         const command = event.message.split(" ");
         switch(command[1]){
