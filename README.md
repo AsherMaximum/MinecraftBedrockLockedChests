@@ -13,7 +13,7 @@ Server admins have the ability to override locks.
 - The `Experiments -> Beta APIs` feature must be turned on for this add-on to function properly.
 
 ## Installation
-1. [Download the Add-on Pack](https://github.com/AsherMaximum/MinecraftBedrockLockedChests/releases/download/latest/lockedContainers.mcpack) and open it to install.
+1. [Download the Add-on Pack](https://github.com/AsherMaximum/MinecraftBedrockLockedChests/releases/latest/download/lockedContainers.mcpack) and open it to install.
 2. Enable the `Experiments -> Beta APIs` feature in your world settings.
 3. Add it to your world under `Behavior Packs`.
 
