@@ -90,17 +90,17 @@ function wouldDouble(placedBlock, playerFace){
     
     //deterimine the block that will be joined as a double chest to the placed block
     if(face === 2 || face === 3){
-        if(placedBlock.west().permutation.getState("facing_direction") === face && placedBlock.west().matches("chest") && placedBlock.west().getComponent("inventory")?.container.size == 27){
-            return placedBlock.west();
-        }else if(placedBlock.east().matches("chest") && placedBlock.east().getComponent("inventory")?.container.size == 27){
+        if(placedBlock.east().permutation.getState("facing_direction") === face && placedBlock.east().matches("chest") && placedBlock.east().getComponent("inventory")?.container.size == 27){
             return placedBlock.east();
+        }else if(placedBlock.west().matches("chest") && placedBlock.west().getComponent("inventory")?.container.size == 27){
+            return placedBlock.west();
         }
     }
     if(face === 4 || face === 5){
-        if(placedBlock.south().permutation.getState("facing_direction") === face && placedBlock.south().matches("chest") && placedBlock.south().getComponent("inventory")?.container.size == 27){
-            return placedBlock.south();
-        }else if(placedBlock.north().matches("chest") && placedBlock.north().getComponent("inventory")?.container.size == 27){
+        if(placedBlock.north().permutation.getState("facing_direction") === face && placedBlock.north().matches("chest") && placedBlock.north().getComponent("inventory")?.container.size == 27){
             return placedBlock.north();
+        }else if(placedBlock.south().matches("chest") && placedBlock.south().getComponent("inventory")?.container.size == 27){
+            return placedBlock.south();
         }
     }
 
