@@ -1,11 +1,11 @@
-# Minecraft Bedrock Locked Containers
+# Minecraft Bedrock Locked Chests and Containers
 
 ## Description
-Locked Containers is a Minecraft Bedrock add-on that allows players to lock barrels and shulker boxes by renaming the container to `Lock: <player1, player2 ...>` before placing it. This feature ensures that only specified players can access the locked containers. Players must include their own username when renaming; otherwise, placing the container will be blocked.
+Locked Containers is a Minecraft Bedrock add-on that allows players to lock chests, barrels, and shulker boxes by renaming the container to `Lock: <player1, player2 ...>` before placing it. This feature ensures that only specified players can access the locked containers. Players must include their own username when renaming; otherwise, placing the container will be blocked.
 
 In addition to locking, this add-on also protects the locked containers from explosions. Any explosions near locked containers, such as those caused by creepers or TNT, are canceled, effectively protecting the surrounding area from damage.
 
-**Note:** Chests are not included in this locking mechanism due to a graphical glitch. When an unauthorized player tries to mine a double chest, the chest splits into two single chests and becomes unopenable until the world is reloaded.
+Double chests are blocked from creation unless the names of both chests match.
 
 Server admins have the ability to override locks.
 
@@ -23,8 +23,6 @@ Server admins have the ability to override locks.
 - Locked containers are protected from explosions, helping secure your items and the surrounding area.
 
 ## Known Issues
-- Chests cannot be locked due to a graphical glitch when mined by unauthorized players.
-- The glitch causes the chest to split and become unopenable until the world is reloaded.
 - Shulker boxes can be broken by pistons, and the lock is not removed from the block where it was.
 
 ## Permissions
