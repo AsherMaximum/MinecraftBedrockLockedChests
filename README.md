@@ -24,6 +24,7 @@ Server admins have the ability to override locks.
 
 ## Known Issues
 - Shulker boxes can be broken by pistons, and the lock is not removed from the block where it was.
+- Hoppers and hopper minecarts can pull from locked containers.
 
 ## Permissions
 Server admins have the ability to override any locks placed on containers.
