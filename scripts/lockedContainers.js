@@ -126,7 +126,7 @@ function doubleChestDiffLock(event, placedBlock, nameTag){
     // world.sendMessage("DoubledLock: "+doubledLock[1]);
     // world.sendMessage("name: "+name);
 
-    if(doubledBlock){
+    if(doubledBlock && doubledLock){
         if(typeof name !== "undefined" && doubledLock[1].toLowerCase() === name){
             // world.sendMessage("Doubled chest lock matches");
             return false
