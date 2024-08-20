@@ -222,6 +222,10 @@ function fixChest(d, block){
     }
 }
 
+world.afterEvents.worldInitialize.subscribe(() => {
+    world.setDynamicProperty("lockedContainersTagVersion", 1);
+})
+
 world.beforeEvents.playerInteractWithBlock.subscribe(event => {
     
     if(checkLock(event, "open")){
