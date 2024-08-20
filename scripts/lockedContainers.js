@@ -1,5 +1,8 @@
 // Import world component from "@minecraft/server"
-import { world, system, BlockPermutation } from '@minecraft/server';
+import { world, system, ItemStack } from '@minecraft/server';
+
+//for testing, to allow placing containers not locked by user
+const dev = false;
 
 function actionBar(player, message){
     system.run(() => actionBarHelper(player, message));
@@ -158,20 +161,64 @@ function getPlacedBlock(event){
     }
 }
 
-function fixChest(d, x, y, z){
-    //clone the chest being broken, including all blocks next to it to cover double chests down to the bottom of the world
-    let result1 = world.getDimension(d).runCommand("clone "+(x-1)+" "+y+" "+(z-1)+" "+(x+1)+" "+y+" "+(z+1)+" "+(x-1)+" "+-64+" "+(z-1));
-    //world.sendMessage ("Clone Result successCount: "+result1.successCount);
+function getOtherHalfChest(block){
+    const itemStash = block.getComponent("inventory").container.getItem(0);
+    block.getComponent("inventory").container.setItem(0, new ItemStack("minecraft:bedrock"));
+    let block2;
 
-    //clone it back to the original location - this fixes the graphical glitch with double chests where they split into two single chests when the event is canceled
-    let result2 = world.getDimension(d).runCommand("clone "+(x-1)+" "+-64+" "+(z-1)+" "+(x+1)+" "+-64+" "+(z+1)+" "+(x-1)+" "+y+" "+(z-1));
-    //world.sendMessage ("Clone Result successCount: "+result2.successCount);
+    if(block.north().getComponent("inventory")?.container.getItem(0)?.typeId === "minecraft:bedrock"){
+        world.sendMessage("matching block north: "+block.north().x+", "+block.north().z);
+        block2 = block.north();
+    }else if(block.south().getComponent("inventory")?.container.getItem(0)?.typeId === "minecraft:bedrock"){
+        world.sendMessage("matching block south: "+block.south().x+", "+block.south().z);
+        block2 = block.south();
+    }else if(block.east().getComponent("inventory")?.container.getItem(0)?.typeId === "minecraft:bedrock"){
+        world.sendMessage("matching block east: "+block.east().x+", "+block.east().z);
+        block2 = block.east();
+    }else if(block.west().getComponent("inventory")?.container.getItem(0)?.typeId === "minecraft:bedrock"){
+        world.sendMessage("matching block west: "+block.west().x+", "+block.west().z);
+        block2 = block.west();
+    }
+    
+    block.getComponent("inventory").container.setItem(0, itemStash);
+    
+    return block2;
+}
+
+function fixChest(d, block){
+
+    const block2 = getOtherHalfChest(block);
+
+    const x1 = block.x;
+    const y = block.y;
+    const z1 = block.z;
+
+    const x2 = block2.x;
+    const z2 = block2.z;
+
+    if(x1 < x2 || z1 < z2){
+        //clone the chest being broken, including all blocks next to it to cover double chests down to the bottom of the world
+        let result1 = world.getDimension(d).runCommand("clone "+x1+" "+y+" "+z1+" "+x2+" "+y+" "+z2+" "+x1+" "+-64+" "+z1);
+        //world.sendMessage ("Clone Result successCount: "+result1.successCount);
+
+        //clone it back to the original location - this fixes the graphical glitch with double chests where they split into two single chests when the event is canceled
+        result1 = world.getDimension(d).runCommand("clone "+x1+" "+-64+" "+z1+" "+x2+" "+-64+" "+z2+" "+x1+" "+y+" "+z1);
+        //world.sendMessage ("Clone Result successCount: "+result1.successCount);
+    }else{
+        //clone the chest being broken, including all blocks next to it to cover double chests down to the bottom of the world
+        let result2 = world.getDimension(d).runCommand("clone "+x2+" "+y+" "+z2+" "+x1+" "+y+" "+z1+" "+x2+" "+-64+" "+z2);
+        //world.sendMessage ("Clone Result successCount: "+result2.successCount);
+
+        //clone it back to the original location - this fixes the graphical glitch with double chests where they split into two single chests when the event is canceled
+        result2 = world.getDimension(d).runCommand("clone "+x2+" "+-64+" "+z2+" "+x1+" "+-64+" "+z1+" "+x2+" "+y+" "+z2);
+        //world.sendMessage ("Clone Result successCount: "+result2.successCount);
+    }
 
     //replace the cloned blocks at bottom of world with air or bedrock depending on the dimension.
     if(d === "minecraft:theEnd"){
-        world.getDimension(d).runCommand("fill "+(x-1)+" "+-64+" "+(z-1)+" "+(x+1)+" "+-64+" "+(z+1)+" air");
+        world.getDimension(d).runCommand("fill "+x1+" "+-64+" "+z1+" "+x2+" "+-64+" "+z2+" air");
     }else{
-        world.getDimension(d).runCommand("fill "+(x-1)+" "+-64+" "+(z-1)+" "+(x+1)+" "+-64+" "+(z+1)+" bedrock");
+        world.getDimension(d).runCommand("fill "+x1+" "+-64+" "+z1+" "+x2+" "+-64+" "+z2+" bedrock");
     }
 }
 
@@ -196,8 +243,6 @@ world.beforeEvents.playerInteractWithBlock.subscribe(event => {
                 actionBar(event.player,"§cYou cannot create a double chest unless the locks match exactly!!!");
                 event.cancel = true;
             }else if(typeof nameTag !== "undefined" && nameTag.slice(0, 5).toLowerCase() === "lock:"){
-                //for testing, to allow placing containers not locked by user
-                const dev = false;
                 nameTag = nameTag.slice(5).trim();
                 if(nameTag.toLowerCase().includes(event.player.name.toLowerCase()) || dev){
                     setLock(b.dimension.id, b.x, b.y, b.z, nameTag, type);
@@ -228,7 +273,7 @@ world.beforeEvents.playerBreakBlock.subscribe(event => {
         if(event.block.getComponent("inventory")?.container.size === 54){
 
             //fix graphical glitch with double chests
-            system.run(() => fixChest(event.dimension.id, event.block.x, event.block.y, event.block.z));
+            system.run(() => fixChest(event.dimension.id, event.block));
         }
         
     }else{
