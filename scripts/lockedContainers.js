@@ -90,7 +90,7 @@ function wouldDouble(placedBlock, playerFace){
         //west
         face = 4;
     }
-    
+
     //deterimine the block that will be joined as a double chest to the placed block
     if(face === 2 || face === 3){
         if(placedBlock.east().permutation.getState("facing_direction") === face && placedBlock.east().matches("chest") && placedBlock.east().getComponent("inventory")?.container.size == 27){
@@ -108,7 +108,7 @@ function wouldDouble(placedBlock, playerFace){
     }
 
     return false;
-    
+
 }
 
 function doubleChestDiffLock(event, placedBlock, nameTag){
@@ -167,21 +167,21 @@ function getOtherHalfChest(block){
     let block2;
 
     if(block.north().getComponent("inventory")?.container.getItem(0)?.typeId === "minecraft:bedrock"){
-        world.sendMessage("matching block north: "+block.north().x+", "+block.north().z);
+        //world.sendMessage("matching block north: "+block.north().x+", "+block.north().z);
         block2 = block.north();
     }else if(block.south().getComponent("inventory")?.container.getItem(0)?.typeId === "minecraft:bedrock"){
-        world.sendMessage("matching block south: "+block.south().x+", "+block.south().z);
+        //world.sendMessage("matching block south: "+block.south().x+", "+block.south().z);
         block2 = block.south();
     }else if(block.east().getComponent("inventory")?.container.getItem(0)?.typeId === "minecraft:bedrock"){
-        world.sendMessage("matching block east: "+block.east().x+", "+block.east().z);
+        //world.sendMessage("matching block east: "+block.east().x+", "+block.east().z);
         block2 = block.east();
     }else if(block.west().getComponent("inventory")?.container.getItem(0)?.typeId === "minecraft:bedrock"){
-        world.sendMessage("matching block west: "+block.west().x+", "+block.west().z);
+        //world.sendMessage("matching block west: "+block.west().x+", "+block.west().z);
         block2 = block.west();
     }
-    
+
     block.getComponent("inventory").container.setItem(0, itemStash);
-    
+
     return block2;
 }
 
@@ -227,7 +227,7 @@ world.afterEvents.worldInitialize.subscribe(() => {
 })
 
 world.beforeEvents.playerInteractWithBlock.subscribe(event => {
-    
+
     if(checkLock(event, "open")){
         event.cancel = true;
         return;
@@ -238,7 +238,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe(event => {
 
         //split off the match and save a value of "chest", "barrel", or "shulker", and leave it undefined if neither
         const type = s.matches("chest") ? "chest" : s.matches("barrel") ? "barrel" : s.typeId.includes("shulker_box") ? "shulker" : null;
-        
+
         if (type) {
             const b = getPlacedBlock(event);
             let nameTag = event.itemStack.nameTag;
@@ -249,7 +249,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe(event => {
             }else if(typeof nameTag !== "undefined" && nameTag.slice(0, 5).toLowerCase() === "lock:"){
                 nameTag = nameTag.slice(5).trim();
                 if(nameTag.toLowerCase().includes(event.player.name.toLowerCase()) || dev){
-                    setLock(b.dimension.id, b.x, b.y, b.z, nameTag, type);
+                    setLock(b.dimension.id, b.x, b.y, b.z, nameTag.toLowerCase(), type);
                     // world.sendMessage("Locked block will be: "+b.typeId);
                 }else{
                     actionBar(event.player,"§cYou cannot lock a container without your username on it!!!");
@@ -257,18 +257,18 @@ world.beforeEvents.playerInteractWithBlock.subscribe(event => {
                 }
             }
         }
-    }   
+    }
 })
 
 
 world.afterEvents.playerInteractWithBlock.subscribe(event => {
 
     const b = getPlacedBlock(event);
-    
+
     //delete lock if a chest, barrel, or shulker was not placed
     if(!b.matches("chest") && !b.matches("barrel") && !b.typeId.includes("shulker_box")){
         deleteLock(b.dimension.id, b.x, b.y, b.z);
-    }    
+    }
 })
 
 world.beforeEvents.playerBreakBlock.subscribe(event => {
@@ -279,12 +279,12 @@ world.beforeEvents.playerBreakBlock.subscribe(event => {
             //fix graphical glitch with double chests
             system.run(() => fixChest(event.dimension.id, event.block));
         }
-        
+
     }else{
         deleteLock(event.block.dimension.id, event.block.x, event.block.y, event.block.z);
     }
-    
-    
+
+
 })
 
 
@@ -308,11 +308,11 @@ world.afterEvents.pistonActivate.subscribe(event => {
     if(!event.isExpanding){
         ex = -1
     }
-   
+
     let move = [];
 
     for(let i=0; i<attached.length; i++) {
-        
+
         let lock = lockExists(dimension, attached[i].location.x, attached[i].location.y, attached[i].location.z);
 
         if(lock && (lock[0] === "chest" || lock[0] === "barrel")){
@@ -343,7 +343,7 @@ world.afterEvents.pistonActivate.subscribe(event => {
             }
             //save location for moving at the end of the loop
             move.push([[attached[i].location.x+xadd, attached[i].location.y+yadd, attached[i].location.z+zadd], lock]);
-            
+
             //delete lock
             deleteLock(dimension, attached[i].location.x, attached[i].location.y, attached[i].location.z);
         }

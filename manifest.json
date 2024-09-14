@@ -4,7 +4,7 @@
 		"name": "Locked Containers",
 		"description": "Allows for locking chests, barrels, and shulker boxes by renaming the container to 'Lock: <player1, player2 ...>' before placing it.\nPlayers must include their own username when renaming, otherwise placing of the container will be blocked.\nAlso prevents those containers from being destroyed in an explosion. Explosions near locked containers are canceled, so this has the side effect of protecting the area from creepers and TNT explosions.\n\nDouble chests are blocked from creation unless the names of both chests match.\n\nServer admins can override locks.\nRequires Experiments->Beta APIs to be turned on.",
 		"uuid": "f5a7398f-6d60-4ebd-abf2-de2cde678e9d",
-		"version": [0, 1, 4],
+		"version": [0, 1, 5],
 		"min_engine_version": [1, 21, 0]
 	},
     "metadata": {
@@ -20,7 +20,7 @@
           "language": "javascript",
           "entry": "scripts/lockedContainers.js",
           "uuid": "16e8504b-cd37-4fe1-a594-3fe6f0a9577b",
-          "version": [1, 1, 4]
+          "version": [1, 1, 5]
         }
 	],
     "capabilities": ["script_eval"],
